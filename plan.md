@@ -47,29 +47,37 @@ Chrome extension to audit publisher websites for ad optimization opportunities b
 ## Phase 2: Data Collection
 **Goal:** Implement core data gathering from both sources (ads.txt + Prebid)
 
+**Note:** Manifest V3 service workers are event-driven and may not always be running. Use `chrome.runtime.sendMessage()` and `chrome.runtime.onMessage.addListener()` for all message passing.
+
 ### Tasks
+- [ ] Update manifest.json for Phase 2
+  - Add `"tabs"` permission (needed to get current tab URL)
+  - Add `web_accessible_resources` for rules.json loading
+  - Ensure all message passing permissions are correct
 - [ ] Implement content.js (Prebid inspector)
   - Check if `window.pbjs` exists
   - Extract active bidders list
   - Get timeout setting
   - Capture Prebid version
   - Detect Prebid-related console errors
-  - Send data to popup via message passing
+  - Send data to popup via `chrome.runtime.sendMessage()`
 - [ ] Implement background.js (ads.txt fetcher)
-  - Listen for messages from popup
-  - Fetch ads.txt from current domain
-  - Parse ads.txt content
-  - Handle 404/network errors gracefully
-  - Return parsed data to popup
+  - Set up `chrome.runtime.onMessage.addListener()` for requests
+  - Fetch ads.txt from current domain using `fetch()` API
+  - Parse ads.txt content (split by lines, filter comments)
+  - Handle 404/network errors gracefully (return error status)
+  - Return parsed data to popup via message response
 - [ ] Create rules.json
   - Define `requiredBidders` array
   - Set `timeoutRange` (min/max)
   - List `requiredAdsTxtEntries`
   - Set `minimumBidders` and `maximumBidders`
-  - Add inline comments for clarity
+  - Add inline comments for clarity (JSON doesn't support comments, use descriptive keys)
 - [ ] Update popup.js
-  - Request data from content.js
-  - Request ads.txt from background.js
+  - Use `chrome.tabs.query()` to get current tab URL
+  - Request Prebid data from content.js using `chrome.tabs.sendMessage()`
+  - Request ads.txt from background.js using `chrome.runtime.sendMessage()`
+  - Load rules.json using `fetch(chrome.runtime.getURL('rules.json'))`
   - Log collected data to console
   - Display raw data in popup (temporary, for testing)
 

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Publisher Page - PubOptimize</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+    .ad-slot {
+      background: #f0f0f0;
+      border: 2px dashed #ccc;
+      padding: 40px;
+      margin: 20px 0;
+      text-align: center;
+      color: #999;
+    }
+    .article {
+      margin: 30px 0;
+    }
+    .note {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Publisher Site</h1>
+
+  <div class="note">
+    <strong>Note:</strong> This is a test page for PubOptimize extension.
+    It simulates a publisher website with Prebid.js configured.
+    Open the PubOptimize extension to see the audit results.
+  </div>
+
+  <div class="article">
+    <h2>Sample Article: The Future of Digital Advertising</h2>
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+    </p>
+  </div>
+
+  <div class="ad-slot" id="ad-top">
+    [Advertisement Slot - Top Banner]
+  </div>
+
+  <div class="article">
+    <h3>Understanding Header Bidding</h3>
+    <p>
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+      eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident,
+      sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </p>
+    <p>
+      Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
+      doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore
+      veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+    </p>
+  </div>
+
+  <div class="ad-slot" id="ad-sidebar">
+    [Advertisement Slot - Sidebar]
+  </div>
+
+  <div class="article">
+    <h3>Maximizing Ad Revenue</h3>
+    <p>
+      Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit,
+      sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+    </p>
+  </div>
+
+  <script>
+    // Mock Prebid.js implementation for testing
+    console.log('Test page: Initializing mock Prebid.js');
+
+    // Create mock pbjs object
+    window.pbjs = window.pbjs || {};
+    window.pbjs.que = window.pbjs.que || [];
+
+    // Mock Prebid version
+    window.pbjs.version = '8.32.0';
+
+    // Mock bidder timeout configuration
+    window.pbjs._config = {
+      bidderTimeout: 2000
+    };
+
+    // Mock getConfig function
+    window.pbjs.getConfig = function() {
+      return {
+        bidderTimeout: 2000,
+        priceGranularity: 'medium',
+        enableSendAllBids: true
+      };
+    };
+
+    // Mock ad units with bidders
+    window.pbjs.adUnits = [
+      {
+        code: 'ad-top',
+        mediaTypes: {
+          banner: {
+            sizes: [[728, 90], [970, 250]]
+          }
+        },
+        bids: [
+          {
+            bidder: 'appnexus',
+            params: {
+              placementId: '13144370'
+            }
+          },
+          {
+            bidder: 'rubicon',
+            params: {
+              accountId: '14062',
+              siteId: '70608',
+              zoneId: '335918'
+            }
+          },
+          {
+            bidder: 'pubmatic',
+            params: {
+              publisherId: '156209',
+              adSlot: 'top-banner'
+            }
+          },
+          {
+            bidder: 'openx',
+            params: {
+              unit: '540279544',
+              delDomain: 'test-del-domain'
+            }
+          },
+          {
+            bidder: 'ix',
+            params: {
+              siteId: '123456'
+            }
+          },
+          {
+            bidder: 'criteo',
+            params: {
+              networkId: '1234'
+            }
+          }
+        ]
+      },
+      {
+        code: 'ad-sidebar',
+        mediaTypes: {
+          banner: {
+            sizes: [[300, 250], [300, 600]]
+          }
+        },
+        bids: [
+          {
+            bidder: 'appnexus',
+            params: {
+              placementId: '13144371'
+            }
+          },
+          {
+            bidder: 'rubicon',
+            params: {
+              accountId: '14062',
+              siteId: '70608',
+              zoneId: '335919'
+            }
+          },
+          {
+            bidder: 'pubmatic',
+            params: {
+              publisherId: '156209',
+              adSlot: 'sidebar'
+            }
+          },
+          {
+            bidder: 'sovrn',
+            params: {
+              tagid: '123456'
+            }
+          }
+        ]
+      }
+    ];
+
+    // Mock additional Prebid functions
+    window.pbjs.addAdUnits = function(adUnits) {
+      console.log('Mock pbjs.addAdUnits called', adUnits);
+    };
+
+    window.pbjs.requestBids = function(params) {
+      console.log('Mock pbjs.requestBids called', params);
+    };
+
+    window.pbjs.setTargetingForGPTAsync = function() {
+      console.log('Mock pbjs.setTargetingForGPTAsync called');
+    };
+
+    console.log('Test page: Mock Prebid.js initialized successfully');
+    console.log('Test page: Configured bidders:',
+      [...new Set(window.pbjs.adUnits.flatMap(unit => unit.bids.map(bid => bid.bidder)))]
+    );
+  </script>
+</body>
+</html>

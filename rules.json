@@ -1,0 +1,27 @@
+{
+  "requiredBidders": [
+    "appnexus",
+    "rubicon",
+    "pubmatic",
+    "openx"
+  ],
+  "timeoutRange": {
+    "min": 1000,
+    "max": 3000
+  },
+  "requiredAdsTxtEntries": [
+    "google.com",
+    "rubiconproject.com",
+    "appnexus.com",
+    "pubmatic.com"
+  ],
+  "minimumBidders": 5,
+  "maximumBidders": 12,
+  "_comments": {
+    "requiredBidders": "Core bidders that should be present in Prebid config",
+    "timeoutRange": "Acceptable timeout range in milliseconds for bid responses",
+    "requiredAdsTxtEntries": "Critical SSP domains that must appear in ads.txt",
+    "minimumBidders": "Minimum number of bidders for healthy competition",
+    "maximumBidders": "Maximum bidders before performance degradation"
+  }
+}

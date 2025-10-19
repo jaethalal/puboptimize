@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PubOptimize is a Chrome extension (Manifest V3) that audits publisher websites for ad optimization opportunities by analyzing ads.txt files and Prebid.js header bidding configurations.
 
-**Current Status:** Phase 2 complete. Extension collects data but does not yet analyze it or provide recommendations.
+**Current Status:** Phase 3 complete. Extension collects data, analyzes it against rules.json, and provides color-coded recommendations with prioritized action items.
 
 ## Architecture: Multi-World Script Injection Pattern
 
@@ -32,6 +32,13 @@ This extension uses a **critical three-script architecture** to overcome Chrome'
 - Fetches ads.txt files from publisher domains
 - Parses content and detects duplicates
 - Responds to requests from popup.js via `chrome.runtime.onMessage`
+
+### 4. popup.js (Analysis & UI)
+- Collects data from content script and background script
+- Analyzes data against rules.json validation criteria
+- Generates color-coded status (PASS/WARNING/FAIL)
+- Displays top 3 prioritized action items
+- Renders detailed findings with visual indicators
 
 **Critical:** Never add injected-script.js to manifest.json content_scripts array. It must be dynamically injected to run in MAIN world. Adding it to manifest causes it to run in ISOLATED world where `window.pbjs` is inaccessible.
 
@@ -76,13 +83,13 @@ open test-page.html
 ## Configuration
 
 ### rules.json
-Defines validation criteria for audits (Phase 3 will implement comparison logic):
-- `requiredBidders`: Array of bidder codes that should be present
-- `timeoutRange`: {min, max} acceptable bidder timeout in ms
-- `requiredAdsTxtEntries`: Array of domains that should be in ads.txt
-- `minimumBidders`/`maximumBidders`: Acceptable bidder count range
+Defines validation criteria for audits:
+- `requiredBidders`: Array of bidder codes that should be present (e.g., appnexus, rubicon, pubmatic, openx)
+- `timeoutRange`: {min, max} acceptable bidder timeout in ms (e.g., 1000-3000)
+- `requiredAdsTxtEntries`: Array of domains that should be in ads.txt (e.g., google.com, rubiconproject.com)
+- `minimumBidders`/`maximumBidders`: Acceptable bidder count range (e.g., 5-12)
 
-Edit this file to customize audit rules without code changes.
+Edit this file to customize audit rules without code changes. The extension automatically compares collected data against these rules and generates recommendations.
 
 ## Message Passing Patterns
 
@@ -100,17 +107,30 @@ window.postMessage({ type: 'PUBOPTIMIZE_PREBID_DATA_RESPONSE', data: {...} }, '*
 chrome.runtime.sendMessage({ action: 'fetchAdsTxt', domain: 'example.com' }, callback)
 ```
 
-## Phase 3 Roadmap (Not Yet Implemented)
+## Analysis & Validation Logic (Phase 3)
 
-Phase 3 will add analysis logic to popup.js:
-- Compare collected Prebid bidders vs rules.json required bidders
-- Validate bidder count and timeout are in acceptable ranges
-- Check ads.txt contains required SSP entries
-- Generate color-coded status (green/yellow/red)
-- Display top 3 prioritized action items
-- Update popup.html UI with findings
+The extension performs comprehensive analysis in popup.js using the `analyzeData()` function:
 
-Current popup.js only displays raw data without analysis.
+### Prebid.js Checks
+- **Bidder Count**: Must be between 5-12 bidders (FAIL if outside range)
+- **Required Bidders**: Checks for presence of appnexus, rubicon, pubmatic, openx (WARNING if missing)
+- **Timeout**: Must be between 1000-3000ms (WARNING if outside range)
+
+### ads.txt Checks
+- **File Exists**: Must have ads.txt file (FAIL if missing)
+- **Required Entries**: Must contain google.com, rubiconproject.com, appnexus.com, pubmatic.com (WARNING if missing)
+- **Duplicates**: Detects duplicate entries (WARNING if found)
+
+### Status Calculation
+- **PASS** (Green): All checks pass
+- **WARNING** (Yellow): Minor issues, site still functional but could be optimized
+- **FAIL** (Red): Critical issues that block monetization or competition
+
+### Action Items
+- Auto-generated based on findings
+- Prioritized by severity (1=critical, 2=warning, 3=optimization)
+- Limited to top 3 most important actions
+- Displayed with 🔴 (critical) or ⚠️ (warning) icons
 
 ## Git Workflow
 

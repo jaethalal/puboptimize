@@ -30,20 +30,72 @@
           result.version = window.pbjs.version;
         }
 
-        // Get bidders from adUnits configuration
-        if (window.pbjs.adUnits && Array.isArray(window.pbjs.adUnits)) {
-          const bidderSet = new Set();
-          window.pbjs.adUnits.forEach(adUnit => {
-            if (adUnit.bids && Array.isArray(adUnit.bids)) {
-              adUnit.bids.forEach(bid => {
-                if (bid.bidder) {
-                  bidderSet.add(bid.bidder);
+        const bidderSet = new Set();
+
+        // METHOD 1: Extract bidders from getBidResponses() (PRIMARY - Real auction data)
+        // This works best for production sites that have run auctions
+        try {
+          if (window.pbjs.getBidResponses && typeof window.pbjs.getBidResponses === 'function') {
+            const bidResponses = window.pbjs.getBidResponses();
+            if (bidResponses && typeof bidResponses === 'object') {
+              Object.keys(bidResponses).forEach(adUnitCode => {
+                const response = bidResponses[adUnitCode];
+                if (response && response.bids && Array.isArray(response.bids)) {
+                  response.bids.forEach(bid => {
+                    if (bid.bidder) {
+                      bidderSet.add(bid.bidder);
+                    }
+                    // Also try bidderCode as fallback
+                    if (bid.bidderCode) {
+                      bidderSet.add(bid.bidderCode);
+                    }
+                  });
                 }
               });
+              console.log('PubOptimize: Extracted bidders from getBidResponses()', Array.from(bidderSet));
             }
-          });
-          result.bidders = Array.from(bidderSet);
+          }
+        } catch (error) {
+          console.warn('PubOptimize: Error extracting from getBidResponses()', error);
+          result.errors.push(`getBidResponses error: ${error.message}`);
         }
+
+        // METHOD 2: Extract bidders from adUnits configuration (FALLBACK - Static config)
+        // This works for test pages and sites with accessible adUnits
+        try {
+          if (window.pbjs.adUnits && Array.isArray(window.pbjs.adUnits)) {
+            window.pbjs.adUnits.forEach(adUnit => {
+              if (adUnit.bids && Array.isArray(adUnit.bids)) {
+                adUnit.bids.forEach(bid => {
+                  if (bid.bidder) {
+                    bidderSet.add(bid.bidder);
+                  }
+                });
+              }
+            });
+            console.log('PubOptimize: Extracted bidders from adUnits', Array.from(bidderSet));
+          }
+        } catch (error) {
+          console.warn('PubOptimize: Error extracting from adUnits', error);
+          result.errors.push(`adUnits error: ${error.message}`);
+        }
+
+        // METHOD 3: Check bidderSettings for additional bidder info (SUPPLEMENTAL)
+        try {
+          if (window.pbjs.bidderSettings && typeof window.pbjs.bidderSettings === 'object') {
+            Object.keys(window.pbjs.bidderSettings).forEach(bidderCode => {
+              // Skip special keys like 'standard'
+              if (bidderCode !== 'standard') {
+                bidderSet.add(bidderCode);
+              }
+            });
+          }
+        } catch (error) {
+          console.warn('PubOptimize: Error extracting from bidderSettings', error);
+        }
+
+        // Set final bidders array
+        result.bidders = Array.from(bidderSet);
 
         // Get timeout setting
         if (window.pbjs.getConfig) {
@@ -53,9 +105,10 @@
           }
         }
 
-        // Note: Error tracking simplified for POC
-        // In production, would need more sophisticated error capture
-        result.errors = [];
+        // Clear errors if we successfully extracted bidders
+        if (result.bidders.length > 0 && result.errors.length > 0) {
+          result.errors = [];
+        }
 
       } else {
         console.log('PubOptimize: Prebid.js not detected in MAIN world');
